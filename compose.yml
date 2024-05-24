@@ -1,0 +1,92 @@
+services:
+  app:
+    build:
+      context: ./php/
+      dockerfile: Dockerfile
+      args:
+        TZ: ${TZ}
+        PHP_VERSION: ${PHP_VERSION}
+        ENVIRONMENT: ${ENVIRONMENT}
+    restart: unless-stopped
+    volumes:
+      - ./app:/var/www/app
+    networks:
+      - app-network
+    environment:
+      TZ: ${TZ}
+      VIRTUAL_HOST: ${APP_VIRTUAL_HOST}
+      APP_DIRECTORY: ${APP_DIRECTORY}
+      PHP_VERSION: ${PHP_VERSION}
+      ENVIRONMENT: ${ENVIRONMENT}
+      REPOSITORY_URL: ${REPOSITORY_URL}
+      REPOSITORY_HOST: ${REPOSITORY_HOST}
+      REPOSITORY_BRANCH: ${REPOSITORY_BRANCH}
+    container_name: ${APP_CONTAINER_NAME}
+
+  nginx:
+    build:
+      context: ./nginx/
+      dockerfile: Dockerfile
+      args:
+        VIRTUAL_HOST: ${APP_VIRTUAL_HOST}
+        APP_CONTAINER_NAME: ${APP_CONTAINER_NAME}
+        TZ: ${TZ}
+    container_name: ${NGINX_PROXY_CONTAINER_NAME}
+    restart: always
+    ports:
+      - "${APP_PORT_CONTAINER}:${NGINX_PROXY_PORT_CONTAINER}"
+      - "${APP_SSL_PORT_CONTAINER}:443"
+    volumes:
+      - ./app:/var/www/app
+      #- ./nginx/default.template.conf:/etc/nginx/templates/nginx.conf.template
+      - ./nginx/ssl:/etc/nginx/ssl
+    environment:
+      VIRTUAL_HOST: ${APP_VIRTUAL_HOST}
+      APP_CONTAINER_NAME: ${APP_CONTAINER_NAME}
+      TZ: ${TZ}
+    depends_on:
+      - app
+    networks:
+      - app-network
+
+  mysql:
+    build:
+      context: ./mysql
+      dockerfile: Dockerfile
+      args:
+        MYSQL_TAG: ${MYSQL_TAG}
+    image: ${MYSQL_TAG}
+    container_name: ${MYSQL_CONTAINER_NAME}
+    restart: always
+    environment:
+      MYSQL_ROOT_PASSWORD: ${MYSQL_DB_ROOT_PASSWORD}
+      MYSQL_DATABASE: ${MYSQL_DB_DATABASE}
+      MYSQL_USER: ${MYSQL_DB_USER}
+      MYSQL_PASSWORD: ${MYSQL_DB_PASSWORD}
+    volumes:
+      - mysql-data:/var/lib/mysql
+    networks:
+      - app-network
+
+  phpmyadmin:
+    image: ${PMA_TAG}
+    container_name: ${PMA_CONTAINER_NAME}
+    restart: always
+    environment:
+      PMA_HOST: mysql
+      MYSQL_ROOT_PASSWORD: ${MYSQL_DB_ROOT_PASSWORD}
+      UPLOAD_LIMIT: 200000000
+    ports:
+      - "${PMA_PROXY_PORT_CONTAINER}:80"
+    depends_on:
+      - mysql
+    networks:
+      - app-network
+
+networks:
+  app-network:
+    driver: bridge
+
+volumes:
+  app:
+  mysql-data:
