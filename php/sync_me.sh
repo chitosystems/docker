@@ -30,7 +30,7 @@ if [ ! -d .git ]; then
     echo "Initializing Git repository"
     git init
     git branch -m "${REPOSITORY_BRANCH}"
-    git config pull.ff only
+    git config --global pull.rebase true
     git config --global user.email "server@${VIRTUAL_HOST}"
     git config --global user.name "${VIRTUAL_HOST}"
     git config --global --add safe.directory "${VIRTUAL_HOST}"
