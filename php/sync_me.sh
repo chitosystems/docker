@@ -29,6 +29,7 @@ fi
 if [ ! -d .git ]; then
     echo "Initializing Git repository"
     git init
+    git config --global init.defaultBranch main
     git branch -m "${REPOSITORY_BRANCH}"
     git config --global pull.rebase true
     git config --global user.email "server@${VIRTUAL_HOST}"
