@@ -9,3 +9,6 @@
 !/README.md
 
 !/compose.yml
+!/.dockerignore
+!/.env.example
+!/redis/

@@ -7,11 +7,9 @@ services:
         TZ: ${TZ}
         PHP_VERSION: ${PHP_VERSION}
         ENVIRONMENT: ${ENVIRONMENT}
+        APP_DIRECTORY: ${APP_DIRECTORY}
+    image: ${APP_CONTAINER_NAME}:v0.2
     restart: unless-stopped
-    volumes:
-      - ./app:/var/www/app
-    networks:
-      - app-network
     environment:
       TZ: ${TZ}
       VIRTUAL_HOST: ${APP_VIRTUAL_HOST}
@@ -22,32 +20,42 @@ services:
       REPOSITORY_HOST: ${REPOSITORY_HOST}
       REPOSITORY_BRANCH: ${REPOSITORY_BRANCH}
     container_name: ${APP_CONTAINER_NAME}
+    volumes:
+      - ./app:${APP_DIRECTORY}
+      - ./php/php.ini:/usr/local/etc/php/php.ini
+    networks:
+      - app-network
+    depends_on:
+      - mysql
+      - redis
 
   nginx:
     build:
       context: ./nginx/
       dockerfile: Dockerfile
       args:
+        NGINX_TAG: ${NGINX_TAG}
         VIRTUAL_HOST: ${APP_VIRTUAL_HOST}
         APP_CONTAINER_NAME: ${APP_CONTAINER_NAME}
         TZ: ${TZ}
+    image: ${NGINX_PROXY_CONTAINER_NAME}:${NGINX_TAG}
     container_name: ${NGINX_PROXY_CONTAINER_NAME}
     restart: always
     ports:
-      - "${APP_PORT_CONTAINER}:${NGINX_PROXY_PORT_CONTAINER}"
+      - "${APP_PORT_CONTAINER}:80"
       - "${APP_SSL_PORT_CONTAINER}:443"
     volumes:
-      - ./app:/var/www/app
+      - ./app:${APP_DIRECTORY}
       #- ./nginx/default.template.conf:/etc/nginx/templates/nginx.conf.template
       - ./nginx/ssl:/etc/nginx/ssl
     environment:
       VIRTUAL_HOST: ${APP_VIRTUAL_HOST}
       APP_CONTAINER_NAME: ${APP_CONTAINER_NAME}
       TZ: ${TZ}
-    depends_on:
-      - app
     networks:
       - app-network
+    depends_on:
+      - app
 
   mysql:
     build:
@@ -65,6 +73,21 @@ services:
       MYSQL_PASSWORD: ${MYSQL_DB_PASSWORD}
     volumes:
       - mysql-data:/var/lib/mysql
+    networks:
+      - app-network
+
+  redis:
+    build:
+      context: ./redis
+      dockerfile: Dockerfile
+      args:
+        REDIS_TAG: ${REDIS_TAG}
+        REDIS_PASSWORD: ${REDIS_PASSWORD}
+    container_name: ${REDIS_CONTAINER_NAME}
+    ports:
+      - "6379:6379"
+    volumes:
+      - redis-data:/data
     networks:
       - app-network
 
@@ -89,4 +112,8 @@ networks:
 
 volumes:
   app:
+    name: silverstripe_app_data
   mysql-data:
+    name: silverstripe_mysql_data
+  redis-data:
+    name: silverstripe_redis_data
