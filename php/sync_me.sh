@@ -31,11 +31,13 @@ if [ ! -d .git ]; then
     git init
     git config --global init.defaultBranch main
     git branch -m "${REPOSITORY_BRANCH}"
-    git config --global pull.rebase true
+
     git config --global user.email "server@${VIRTUAL_HOST}"
     git config --global user.name "${VIRTUAL_HOST}"
     git config --global --add safe.directory "${VIRTUAL_HOST}"
 fi
+
+git config --global pull.rebase true
 
 # Check if origin doesn't exist before adding
 if ! git remote get-url origin >/dev/null 2>&1; then
