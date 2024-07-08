@@ -8,7 +8,7 @@ ARG TZ
 ENV TZ $TZ
 
 RUN apt-get update && apt-get install -y --no-install-recommends \
-    nano curl libcurl4-openssl-dev libfreetype6-dev libjpeg62-turbo-dev libpng-dev libwebp-dev libxpm-dev \
+    nano curl libcurl4-openssl-dev libfreetype6-dev libjpeg62-turbo-dev libpng-dev default-mysql-client libwebp-dev libxpm-dev \
     zlib1g-dev libzip-dev unzip acl libicu-dev git gnupg2 wget software-properties-common nodejs vim g++ \
     libldap2-dev libtidy-dev libxslt1-dev libgmp-dev bash openssh-client \
     && git config --global --add safe.directory ${APP_DIRECTORY} \
